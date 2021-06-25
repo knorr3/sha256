@@ -9,6 +9,23 @@ import Data.Bits
 import Numeric (showIntAtBase)
 import Data.Char (intToDigit)
 
+-- Some default values
+primes = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97, 101, 103, 107, 109, 113, 127, 131, 137, 139, 149, 151, 157, 163, 167, 173, 179, 181, 191, 193, 197, 199, 211, 223, 227, 229, 233, 239, 241, 251, 257, 263, 269, 271, 277, 281, 283, 293, 307, 311]
+
+zero :: Word32
+zero = 0
+
+exampleWord1 :: Word32
+exampleWord1 = 4278255360
+
+exampleWord2 :: Word32
+exampleWord2 = 16383
+
+-- Some useful util functions
+bin2dec :: String -> Integer
+bin2dec = foldr (\c s -> s * 2 + c) 0 . reverse . map c2i
+    where c2i c = if c == '0' then 0 else 1
+
 toBinary :: Integer -> String
 toBinary x = showIntAtBase 2 intToDigit x ""
 
@@ -33,32 +50,45 @@ padding s = if (length s + 64) `mod` 512 == 0 && length s > 64
             then s
             else padding (s ++ ['0'])
 
-cutBlocks :: String -> [[String]]
+-- Message Functions
+cutBlocks :: String -> [[Word32]]
 cutBlocks [] = []
 cutBlocks s  = cutWords (take 512 s) : cutBlocks (drop 512 s)
 
-cutWords :: String -> [String]
+cutWords :: String -> [Word32]
 cutWords [] = []
-cutWords s  = take 32 s : cutWords (drop 32 s)
+cutWords s  = fromIntegral (bin2dec $ take 32 s) : cutWords (drop 32 s)
 
-messageSchedules :: [[String]] -> [[String]]
-messageSchedules = map (messageSchedule 0)
+messageSchedule :: Int -> [Word32] -> [Word32]
+messageSchedule 64 _ = []
+messageSchedule 16 original = original ++ temporary : messageSchedule (i+1) (original ++ [temporary])
+        where temporary = σ1 (original !! (i-2)) + (original !! (i-7)) + σ0 (original !! (i-15)) + (original !! (i-16))
+              i = 16 
+messageSchedule i original = temporary : messageSchedule (i+1) (original ++ [temporary])
+        where temporary = σ1 (original !! (i-2)) + (original !! (i-7)) + σ0 (original !! (i-15)) + (original !! (i-16))
 
-messageSchedule :: Integer -> [String] -> [String]
-messageSchedule [0..15] (s:rest) = undefined 
+-- Hashing Functions
+initial :: [Word32]
+initial = [ constant2 0
+          , constant2 1
+          , constant2 2
+          , constant2 3
+          , constant2 4
+          , constant2 5
+          , constant2 6
+          , constant2 7
+          ]
 
+t1 :: Word32
+t1 = undefined
 
-primes = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97, 101, 103, 107, 109, 113, 127, 131, 137, 139, 149, 151, 157, 163, 167, 173, 179, 181, 191, 193, 197, 199, 211, 223, 227, 229, 233, 239, 241, 251, 257, 263, 269, 271, 277, 281, 283, 293, 307, 311]
+t2 :: Word32
+t2 = undefined 
 
-zero :: Word32
-zero = 0
+compression :: [Word32] -> [Word32]
+compression ms = undefined  
 
-exampleWord1 :: Word32
-exampleWord1 = 4278255360
-
-exampleWord2 :: Word32
-exampleWord2 = 16383
-
+-- Word Operations
 shr :: Word32 -> Int -> Word32
 shr = shiftR
 
@@ -109,8 +139,14 @@ maj x y z = xor (xor a b) c
                 b = x `andW` z
                 c = y `andW` z
 
-root :: Int -> Double
-root t = (primes !! t) ** (1/3)
+root3 :: Int -> Double
+root3 t = (primes !! t) ** (1/3)
 
-constant :: Int -> Word32
-constant t = floor ((root t - fromIntegral (floor (root t))) * 2^32)
+constant3 :: Int -> Word32
+constant3 t = floor ((root3 t - fromIntegral (floor (root3 t))) * 2^32)
+
+root2 :: Int -> Double
+root2 t = (primes !! t) ** (1/2)
+
+constant2 :: Int -> Word32
+constant2 t = floor ((root2 t - fromIntegral (floor (root2 t))) * 2^32)
