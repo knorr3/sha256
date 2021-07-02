@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 6e5a45583ab16bd377c95e21cb5cf24e3ea86df2044c66e7dac0e1ff0e3cdaf1
+-- hash: e03fcab8a6e7a8656f5c93da4a2cebff8c90edbfe527e8bdb949f23e4a3ca7b5
 
 name:           sha256
 version:        0.1.0.0
@@ -27,9 +27,8 @@ source-repository head
 
 library
   exposed-modules:
-      Lib
-      SHA256
       Functions
+      SHA256
       Types
   other-modules:
       Paths_sha256
@@ -45,7 +44,7 @@ executable sha256-exe
       Paths_sha256
   hs-source-dirs:
       app
-  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N -Wall
   build-depends:
       base >=4.7 && <5
     , sha256
@@ -58,7 +57,7 @@ test-suite sha256-test
       Paths_sha256
   hs-source-dirs:
       test
-  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N -Wall
   build-depends:
       base >=4.7 && <5
     , sha256
