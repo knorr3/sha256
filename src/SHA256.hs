@@ -20,16 +20,18 @@ hash x = do
          let message = paddedString ++ printLeft 64 (fromIntegral $ length concatString - 1)
          let blocks = cutBlocks message
          let schedules = map (messageSchedule 16) blocks
-         let compressed = map compression schedules
-         print2 compressed
-         
+         let nums = foldl ( ++ ) "Hash: " $ map (toHex . fromIntegral) (forEverySchedule initial schedules)
+         nums
 
-
+forEverySchedule :: [Word32] -> [[Word32]] -> [Word32]
+forEverySchedule hash [] = hash
+forEverySchedule initHashValue (schedule:next) = do
+         let nextHashValue = compression 0 initHashValue schedule
+         forEverySchedule nextHashValue next
 
 print2 :: [[Word32]] -> String
 print2 (x:xs) = (print1 x) ++ (print2 xs)
 print2 [] = []
-
 
 print1 :: [Word32] -> String
 print1 (x:xs) = (printLeft 32 x) ++ "\n" ++ print1 xs

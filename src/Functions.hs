@@ -6,7 +6,7 @@ where
 import Data.Word
 import Data.Bits
 
-import Numeric (showIntAtBase)
+import Numeric (showIntAtBase, showHex)
 import Data.Char (intToDigit)
 
 -- Some default values
@@ -28,6 +28,9 @@ bin2dec = foldr (\c s -> s * 2 + c) 0 . reverse . map c2i
 
 toBinary :: Integer -> String
 toBinary x = showIntAtBase 2 intToDigit x ""
+
+toHex :: Integer -> String
+toHex x = showIntAtBase 16 intToDigit x ""
 
 printLeft :: Int -> Word32  -> String
 printLeft i word = expandLeft i $ toBinary $ fromIntegral word
@@ -63,7 +66,7 @@ messageSchedule :: Int -> [Word32] -> [Word32]
 messageSchedule 64 _ = []
 messageSchedule 16 original = original ++ temporary : messageSchedule (i+1) (original ++ [temporary])
         where temporary = σ1 (original !! (i-2)) + (original !! (i-7)) + σ0 (original !! (i-15)) + (original !! (i-16))
-              i = 16 
+              i = 16
 messageSchedule i original = temporary : messageSchedule (i+1) (original ++ [temporary])
         where temporary = σ1 (original !! (i-2)) + (original !! (i-7)) + σ0 (original !! (i-15)) + (original !! (i-16))
 
@@ -79,14 +82,31 @@ initial = [ constant2 0
           , constant2 7
           ]
 
-t1 :: Word32
-t1 = undefined
+a = 0
+b = 1
+c = 2
+d = 3
+e = 4
+f = 5
+g = 6
+h = 7
 
-t2 :: Word32
-t2 = undefined 
+makeT1 :: Int -> [Word32] -> [Word32] -> Word32
+makeT1 i atoh schedule = bσ1 (atoh !! e) + ch (atoh !! e) (atoh !! f) (atoh !! g) + (atoh !! h) + constant3 i + schedule !! 0
 
-compression :: [Word32] -> [Word32]
-compression ms = undefined  
+makeT2 :: [Word32] -> Word32
+makeT2 atoh = bσ0 (atoh !! a) + maj (atoh !! a) (atoh !! b) (atoh !! c)
+
+compression :: Int -> [Word32] -> [Word32] -> [Word32]
+compression i atoh [] = zipWith (+) atoh initial
+compression i atoh schedule = do
+        let t1 = makeT1 i atoh schedule
+        let t2 = makeT2 atoh
+        let newA = t1 + t2
+        let newE = (atoh !! d) + t1
+        let newAtoh = [newA, atoh !! a, atoh !! b, atoh !! c, newE, atoh !! e, atoh !! f, atoh !! g]
+        let result = compression (i+1) newAtoh (drop 1 schedule)
+        result
 
 -- Word Operations
 shr :: Word32 -> Int -> Word32
@@ -99,7 +119,7 @@ add :: Word32 -> Word32 -> Word32
 add a b = a + b
 
 andW :: Word32 -> Word32 -> Word32
-andW a b = (.&.) a b
+andW = (.&.)
 
 σ0 :: Word32 -> Word32
 σ0 word = xor (xor a b) c
